@@ -3,11 +3,14 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import createTrip from "@/lib/actions/create-trip";
+import { UploadButton } from "@/lib/upload-thing";
 import { cn } from "@/lib/utils";
-import { useTransition } from "react";
+import Image from "next/image";
+import { useState, useTransition } from "react";
 
 export default function NewTrip() {
   const [isPending, startTransition] = useTransition();
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   return (
     <div className="max-w-lg mx-auto mt-10">
       <Card>
@@ -16,6 +19,9 @@ export default function NewTrip() {
           <form
             className="space-y-6"
             action={(formData: FormData) => {
+              if (imageUrl) {
+                formData.append("imageUrl", imageUrl);
+              }
               startTransition(() => {
                 createTrip(formData);
               });
@@ -79,6 +85,30 @@ export default function NewTrip() {
                   required
                 />
               </div>
+            </div>
+            <div>
+              <label>Trip Image</label>
+
+              {imageUrl && (
+                <Image
+                  src={imageUrl}
+                  alt="Trip Preview"
+                  className="w-full mb-4 rounded-md max-h-48 object-cover"
+                  width={300}
+                  height={100}
+                />
+              )}
+              <UploadButton
+                endpoint="imageUploader"
+                onClientUploadComplete={(res) => {
+                  if (res && res[0].ufsUrl) {
+                    setImageUrl(res[0].ufsUrl);
+                  }
+                }}
+                onUploadError={(error: Error) => {
+                  console.error("Upload error: ", error);
+                }}
+              />
             </div>
 
             <Button type="submit" disabled={isPending} className="w-full">
